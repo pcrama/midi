@@ -423,9 +423,30 @@ works only if the chars are coded in ASCII]"
   :filler (setf status *status*)
   :writer (write-bytes status))
 
+(defgeneric print-midi-message (object stream)
+  (:method ((object message) stream)
+    (when (slot-boundp object 'time)
+      (format stream " T=~A" (slot-value object 'time)))
+    (when (slot-boundp object 'status)
+      (format stream " S=~X" (slot-value object 'status))))
+  (:documentation
+   "One PRINT-OBJECT method is defined for the MIDI message class
+\(common ancestor\): that method prints the wrapping, then calls
+the PRINT-MIDI-MESSAGE method to print the slots."))
+
+(defmethod print-object ((obj message) stream)
+  (print-unreadable-object (obj stream :type t :identity t)
+    (print-midi-message obj stream))
+  obj)
+
 (define-midi-message channel-message (message)
   :slots ((channel :reader message-channel))
   :filler (setf channel (logand *status* #x0f)))
+
+(defmethod print-midi-message ((object channel-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'channel)
+    (format stream " C=~X" (slot-value object 'channel))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -442,6 +463,13 @@ works only if the chars are coded in ASCII]"
   :length 2
   :writer (write-bytes key velocity))
 
+(defmethod print-midi-message ((object note-off-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'key)
+    (format stream " k=~A" (slot-value object 'key)))
+  (when (slot-boundp object 'velocity)
+    (format stream " v=~A" (slot-value object 'velocity))))
+
 (define-midi-message note-on-message (voice-message)
   :status-min #x90 :status-max #x9f
   :slots ((key :initarg :key :reader message-key)
@@ -450,6 +478,13 @@ works only if the chars are coded in ASCII]"
 		velocity next-byte)
   :length 2
   :writer (write-bytes key velocity))
+
+(defmethod print-midi-message ((object note-on-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'key)
+    (format stream " K=~A" (slot-value object 'key)))
+  (when (slot-boundp object 'velocity)
+    (format stream " V=~A" (slot-value object 'velocity))))
 
 (define-midi-message polyphonic-key-pressure-message (voice-message)
   :status-min #xa0 :status-max #xaf
@@ -476,6 +511,11 @@ works only if the chars are coded in ASCII]"
   :filler (setf program next-byte)
   :length 1
   :writer (write-bytes program))
+
+(defmethod print-midi-message ((object program-change-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'program)
+    (format stream " P=~A" (slot-value object 'program))))
 
 (define-midi-message channel-pressure-message (voice-message)
   :status-min #xd0 :status-max #xdf
@@ -565,6 +605,11 @@ works only if the chars are coded in ASCII]"
   :filler (setf code next-byte)
   :length 1
   :writer (write-bytes code))
+
+(defmethod print-midi-message ((object timing-code-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'code)
+    (format stream " code=~A" (slot-value object 'code))))
 
 (define-midi-message song-position-pointer-message (common-message)
   :status-min #xf2 :status-max #xf2
@@ -671,6 +716,11 @@ works only if the chars are coded in ASCII]"
 		 (loop for char across text do
 		       (write-bytes (char-code char)))))
 
+(defmethod print-midi-message ((object text-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'text)
+    (format stream " [~A]" (slot-value object 'text))))
+
 (define-midi-message general-text-message (text-message)
   :data-min #x01 :data-max #x01)
   
@@ -726,6 +776,11 @@ works only if the chars are coded in ASCII]"
   :length 3
   :writer (progn (write-bytes 3) (write-fixed-length-quantity tempo 3)))
 
+(defmethod print-midi-message ((object tempo-message) stream)
+  (call-next-method)
+  (when (slot-boundp object 'tempo)
+    (format stream " tempo=~A" (slot-value object 'tempo))))
+
 (define-midi-message smpte-offset-message (meta-message tempo-map-message)
   :data-min #x54 :data-max #x54
   :slots ((hr) (mn) (se) (fr) (ff))
@@ -733,6 +788,21 @@ works only if the chars are coded in ASCII]"
 				 fr next-byte ff next-byte))
   :length 5
   :writer (write-bytes 5 hr mn se fr ff))
+
+(defmethod print-midi-message ((object smpte-offset-message) stream)
+  (call-next-method)
+  (when (or (slot-boundp object 'hr)
+            (slot-boundp object 'mn)
+            (slot-boundp object 'se)
+            (slot-boundp object 'fr)
+            (slot-boundp object 'ff))
+    (format stream
+            " hmsff=~A/~A/~A/~A/~A"
+            (ignore-errors (slot-value object 'hr))
+            (ignore-errors (slot-value object 'mn))
+            (ignore-errors (slot-value object 'se))
+            (ignore-errors (slot-value object 'fr))
+            (ignore-errors (slot-value object 'ff)))))
 
 (define-midi-message time-signature-message (meta-message tempo-map-message)
   :data-min #x58 :data-max #x58
@@ -743,6 +813,19 @@ works only if the chars are coded in ASCII]"
 				 cc next-byte bb next-byte))
   :length 4
   :writer (write-bytes 4 nn dd cc bb))
+
+(defmethod print-midi-message ((object time-signature-message) stream)
+  (call-next-method)
+  (when (or (slot-boundp object 'nn)
+            (slot-boundp object 'dd)
+            (slot-boundp object 'cc)
+            (slot-boundp object 'bb))
+    (format stream
+            " n/dcb=~A/~A/~A/~A"
+            (ignore-errors (slot-value object 'nn))
+            (ignore-errors (slot-value object 'dd))
+            (ignore-errors (slot-value object 'cc))
+            (ignore-errors (slot-value object 'bb)))))
 
 (define-midi-message key-signature-message (meta-message)
   :data-min #x59 :data-max #x59
