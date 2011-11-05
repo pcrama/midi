@@ -393,7 +393,9 @@ works only if the chars are coded in ASCII]"
        (status-max :initform ,status-max :allocation :class)
        (data-min :initform ,data-min :allocation :class)
        (data-max :initform ,data-max :allocation :class)
-       ,@slots))
+       ,@slots)
+      ,@(when (and (numberp status-min) (numberp status-max) (= status-min status-max))
+              `((:default-initargs :status ,status-min))))
 
     (defmethod fill-message :after ((message ,name))
       (with-slots ,(mapcar #'car slots) message
