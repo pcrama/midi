@@ -11,31 +11,26 @@ http://chordfind.com/
        (+low-mid-tom+ 47)
        (ticks/beat 60)
        (beats/min 60)
+       (*midi-channel* 9)
        (timing-track
 	(list (make-instance 'time-signature-message
-			     :time 0
-			     ;:status #xFF
-                             )
+			     :time 0)
 	      (make-instance 'tempo-message
-			     ;:status #xFF
 			     :time 0
 			     :tempo (round 60000000 beats/min))))
        (drum-track
 	(flet ((make-sound (key vel time duration)
-			   (list (make-instance 'note-on-message
-						:time time
-						:key key
-						:velocity vel
-						:status #x99)
-				 (make-instance 'note-off-message
-						:time (+ time duration)
-						:key key
-						:velocity vel
-						:status #x89))))
+                 (list (make-instance 'note-on-message
+                                      :time time
+                                      :key key
+                                      :velocity vel)
+                       (make-instance 'note-off-message
+                                      :time (+ time duration)
+                                      :key key
+                                      :velocity vel))))
 	      (cons (make-instance 'program-change-message
 				   :program 0
-				   :time 0
-				   :status #xc9)
+				   :time 0)
 		    (loop with now = (- ticks/beat)
 			  with duration = (/ ticks/beat 5)
 			  repeat 4 nconc
@@ -59,27 +54,25 @@ http://chordfind.com/
                                              80
                                              (incf now ticks/beat)
                                              duration))))))
+       (*midi-channel* 5)
        (guitar-track
 	(flet ((make-sound (key vel time duration)
-			   (unless (listp key) (setf key (list key)))
-			   (append (mapcar (lambda (k)
-					     (make-instance 'note-on-message
-							    :time time
-							    :key (+ k 36)
-							    :velocity vel
-							    :status #x95))
-					   key)
-				   (mapcar (lambda (k)
-					     (make-instance 'note-off-message
-							    :time (+ time duration)
-							    :key (+ k 36)
-							    :velocity vel
-							    :status #x85))
-					   key))))
+                 (unless (listp key) (setf key (list key)))
+                 (append (mapcar (lambda (k)
+                                   (make-instance 'note-on-message
+                                                  :time time
+                                                  :key (+ k 36)
+                                                  :velocity vel))
+                                 key)
+                         (mapcar (lambda (k)
+                                   (make-instance 'note-off-message
+                                                  :time (+ time duration)
+                                                  :key (+ k 36)
+                                                  :velocity vel))
+                                 key))))
 	      (cons (make-instance 'program-change-message
 				   :program 25
-				   :time 0
-				   :status #xc5)
+				   :time 0)
 		    (loop with now = (- ticks/beat)
 			  with duration = (/ ticks/beat 5)
 			  repeat 4 nconc

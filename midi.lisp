@@ -380,6 +380,12 @@ works only if the chars are coded in ASCII]"
   (declare (ignore message))
   nil)
 
+(defparameter *midi-channel* nil
+  "Default MIDI channel for midi-messages for which status-min and status-max
+have a difference of 15.  When bound to an \(<= 0 integer 15\), the :status
+default value will automatically combine the message's status-min and
+*midi-channel*.")
+
 (defmacro define-midi-message (name superclasses
 			       &key slots filler (length 0) writer
 			       status-min status-max data-min data-max)
@@ -394,8 +400,16 @@ works only if the chars are coded in ASCII]"
        (data-min :initform ,data-min :allocation :class)
        (data-max :initform ,data-max :allocation :class)
        ,@slots)
-      ,@(when (and (numberp status-min) (numberp status-max) (= status-min status-max))
-              `((:default-initargs :status ,status-min))))
+      ,@(when (and (numberp status-min) (numberp status-max))
+              (cond ((= status-min status-max)
+                     `((:default-initargs :status ,status-min)))
+                    ((= 15 (- status-max status-min))
+                     `((:default-initargs :status (if (and (integerp *midi-channel*)
+                                                           (<= 0 *midi-channel* 15))
+                                                    (logior ,(logand status-min status-max)
+                                                            *midi-channel*)
+                                                    (error "*midi-channel*=~A not supported"
+                                                           *midi-channel*))))))))
 
     (defmethod fill-message :after ((message ,name))
       (with-slots ,(mapcar #'car slots) message
