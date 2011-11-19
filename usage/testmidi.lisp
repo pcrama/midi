@@ -4,7 +4,7 @@ http://midi.mathewvp.com/midiEditor.php
 http://www.sonicspot.com/guide/midifiles.html
 http://en.wikipedia.org/wiki/Chord_names_and_symbols_%28jazz_and_pop_music%29
 http://chordfind.com/
-#|
+|#
 (let* ((+acoustic-bass-drum+ 35)
        (+conga-high+ 62)
        (+high-hat-top+ 46)
