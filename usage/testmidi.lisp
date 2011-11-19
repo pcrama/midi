@@ -114,12 +114,19 @@ DURATION \(in seconds\)"
                                  3
                                  speed
                                  (* 60 10)))
-NIL
   (loop for speed from 60 to 140 by 4 do
            (make-metronome-track (format nil "/tmp/c~A.mid" speed)
                                  4
                                  speed
                                  (* 60 10)))
+for file in /tmp/*mid
+do
+	echo $file ${file%mid}wav ${file%mid}mp3
+	timidity -Ow -A500a -o ${file%mid}wav $file
+	lame --scale 2 -b 16 --resample 16 /${file%mid}wav /${file%mid}mp3
+	rm -- ${file%mid}wav
+done
+
   |#
   (let* ((+acoustic-bass-drum+ 35)
          (+low-mid-tom+ 47)
