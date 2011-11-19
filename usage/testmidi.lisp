@@ -9,6 +9,7 @@ http://chordfind.com/
        (+conga-high+ 62)
        (+high-hat-top+ 46)
        (+low-mid-tom+ 47)
+       (measure-count 4)
        (ticks/beat 60)
        (beats/min 60)
        (*midi-channel* 9)
@@ -33,7 +34,7 @@ http://chordfind.com/
 				   :time 0)
 		    (loop with now = (- ticks/beat)
 			  with duration = (/ ticks/beat 5)
-			  repeat 4 nconc
+			  repeat measure-count nconc
 			  (nconc (make-sound +low-mid-tom+
                                              127
                                              (incf now ticks/beat)
@@ -75,7 +76,7 @@ http://chordfind.com/
 				   :time 0)
 		    (loop with now = (- ticks/beat)
 			  with duration = (/ ticks/beat 5)
-			  repeat 4 nconc
+			  repeat measure-count nconc
 			  (nconc (make-sound '(19 23 26 29)
 					     60
 					     (incf now ticks/beat)
