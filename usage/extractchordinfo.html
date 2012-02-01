@@ -4,10 +4,14 @@
     <script type="text/javascript" src="chordinfo.js"></script>
   </head>
   <body>
+    <div id='chords'>
+    </div>
     <script type="text/javascript">
-      for (i = 0; a.length > i; i++) {
-        /* ((a[i].length > 1)?a[i].substring(0, 2):a[i]) */
-        info_for_one_chord(a[i]+"-0");
+      var pre = document.getElementById('chords');
+      for (i in c) {
+        var newpre = document.createElement('pre');
+        newpre.innerHTML = info_for_one_chord(i);
+        pre.appendChild(newpre);
       }
     </script>
   </body>

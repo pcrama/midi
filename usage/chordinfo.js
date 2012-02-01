@@ -1092,6 +1092,13 @@ function info() {
     s3 = "Note:\t" + s3;
     alert("=== CHORD INFO ===\n\nChord name: " + t + "\n\n" + s1 + "\n" + s2 + "\n" + s3 + "\n\n© 1998-2000 by WS64.com/ChordFind.com");
 }
+function append_with_space(source, suffix) {
+    if ("" == source) {
+        return suffix;
+    } else {
+        return source + " " + suffix;
+    }
+}
 /* cloned from info() */
 function info_for_one_chord(in_chord) {
     /**
@@ -1112,65 +1119,60 @@ function info_for_one_chord(in_chord) {
         return "";
     }
     s0 = "EADGBE";              // s0 are string names in same order as f[1]
-    s1 = s2 = s3 = midinotes = "";
-    for (i = 0; i < 6; i++) {
-        if (f[1].substring(i, i + 1) == "1") s1 = s1 + "X";
-        else s1 = s1 + s0.substring(i, i + 1);
-        s1 = s1 + "\t";
-    }
+    var fretinfo; var midinotes;
+    fretinfo = midinotes = "";
+    var bar_start; var bar_stop;
     /* f[1] : which strings are unused, '0' means used, '1' means unused */
     /* f[2] : fret of 1st string
        f[3] : fret of 2nd string ...
        f[7] : fret of 6th string
        Hence f[x] + offsets in source code => midi notes
      */
-    if (f[1].substring(0, 1) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[2]) + 4) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[2]) + 4 + 36) + "\t";
+    midinoteoffsets = [4+36, 9+36, 2+48, 7+48, 11+48, 4+60];
+    for (i = 0; i < 6; i++) {
+        if (f[1].charAt(i) == "1") {
+            fretinfo = append_with_space(fretinfo, "NIL");
+        } else {
+            if (f[1].charAt(i) == "2") {
+                if (undefined == bar_start) {
+                    bar_start = i;
+                } else {
+                    alert("In chord " + in_chord + ", 2 bar starts: " +
+                          f[1]);
+                    return ""
+                }
+            } else if (f[1].charAt(i) == "3") {
+                if (undefined == bar_stop) {
+                    bar_stop = i;
+                } else {
+                    alert("In chord " + in_chord + ", 2 bar stops: " +
+                          f[1]);
+                    return ""
+                }
+            }
+            fretinfo = append_with_space(fretinfo, f[i + 2]);
+            midinotes = append_with_space(
+                midinotes,
+                "" + (parseInt(f[i + 2]) + midinoteoffsets[i]));
+        }
     }
-    if (f[1].substring(1, 2) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[3]) + 9) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[3]) + 9 + 36) + "\t";
+    if ((undefined == bar_start) && (undefined == bar_stop)) {
+        bar_start = bar_stop = 0;
+    } else if ((undefined == bar_start) || (undefined == bar_stop)) {
+        // Hack: I have no idea why sometimes bar_stop is undefined
+        // (i.e. there is a '2' in f[1] but no '3').  Looking at examples
+        // shows that sometimes, there is a '4', so use that as bar_stop
+        // marker and sometimes, there is neither a '3' nor a '4', so just
+        // let the bar run across the complete width
+        if (undefined == bar_stop) {
+            var has_a_4 = f[1].indexOf('4');
+            if (bar_start <= has_a_4)
+                bar_stop = has_a_4;
+            else
+                bar_stop = f[1].length - 1;
+        }
     }
-    if (f[1].substring(2, 3) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[4]) + 2) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[4]) + 2 + 48) + "\t";
-    }
-    if (f[1].substring(3, 4) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[5]) + 7) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[5]) + 7 + 48) + "\t";
-    }
-    if (f[1].substring(4, 5) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[6]) + 11) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[6]) + 11 + 48) + "\t";
-    }
-    if (f[1].substring(5, 6) == "1") {
-        s3 = s3 + "-\t";
-        midinotes = midinotes + "-\t";
-    } else {
-        s3 = s3 + a[(parseInt(f[7]) + 4) % 12].substring(0, 5) + "\t";
-        midinotes = midinotes + (parseInt(f[7]) + 4 + 60) + "\t";
-    }
-    s1 = "String:\t" + s1;
-    s2 = "Fret:\t" + parseInt(f[2]) + "\t" + parseInt(f[3]) + "\t" + parseInt(f[4]) + "\t" + parseInt(f[5]) + "\t" + parseInt(f[6]) + "\t" + parseInt(f[7]) + "\t";
-    s3 = "Note:\t" + s3;
-    midinotes = "MIDI:\t" + midinotes;
-    alert("=== CHORD INFO ===\n\nChord name: " + in_chord + "\n\n" + s1 + "\n" + s2 + "\n" + s3 + "\n" + midinotes + "\n\n© 1998-2000 by WS64.com/ChordFind.com");
+    return '(:chord "' + in_chord + '" :frets (' + fretinfo + ') :midi (' + midinotes + ') :bar ' + (bar_stop - bar_start) + ')';
 }
 function ini(s1, s2, s3, s4, s5, s6) {
     s = '<IMG SRC="x/empty.gif" width=42 HEIGHT=14 ALT="';
