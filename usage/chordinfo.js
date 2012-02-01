@@ -1095,37 +1095,82 @@ function info() {
 /* cloned from info() */
 function info_for_one_chord(in_chord) {
     /**
-       in_cord: note_name + mode + "-" + variation
-         note_name: one of the note names in the a global array
+       in_chord: note_name + mode + "-" + variation
+         note_name: one of the note names in the a global array (eg A or C#/Db
          mode: "" for Major, "m" for Minor, or any of dim,aug,sus,6,7,maj7,9,add9,m6,m7,mmaj7,m9,11,7sus4,13,6add9,-5,7-5,7maj5,maj9
          variation: an integer (use 0 to be sure)
       */
     var s0, s1, s2, i, i2, f;
+    if (undefined == c[in_chord]) {
+        alert("in_chord: " + in_chord + " unknown in c array");
+        return "";
+    }
     f = pp(c[in_chord]);
-    if (undefined == f) return "";
-    s0 = "EADGBE";
-    s1 = s2 = s3 = "";
+    if (undefined == f) {
+        alert("in_chord: " + in_chord + "-> c[in_chord]: " +
+              c[in_chord] + " returned undefined in pp()");
+        return "";
+    }
+    s0 = "EADGBE";              // s0 are string names in same order as f[1]
+    s1 = s2 = s3 = midinotes = "";
     for (i = 0; i < 6; i++) {
         if (f[1].substring(i, i + 1) == "1") s1 = s1 + "X";
         else s1 = s1 + s0.substring(i, i + 1);
         s1 = s1 + "\t";
     }
-    if (f[1].substring(0, 1) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[2]) + 4) % 12].substring(0, 5) + "\t";
-    if (f[1].substring(1, 2) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[3]) + 9) % 12].substring(0, 5) + "\t";
-    if (f[1].substring(2, 3) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[4]) + 2) % 12].substring(0, 5) + "\t";
-    if (f[1].substring(3, 4) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[5]) + 7) % 12].substring(0, 5) + "\t";
-    if (f[1].substring(4, 5) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[6]) + 11) % 12].substring(0, 5) + "\t";
-    if (f[1].substring(5, 6) == "1") s3 = s3 + "-\t";
-    else s3 = s3 + a[(parseInt(f[7]) + 4) % 12].substring(0, 5) + "\t";
+    /* f[1] : which strings are unused, '0' means used, '1' means unused */
+    /* f[2] : fret of 1st string
+       f[3] : fret of 2nd string ...
+       f[7] : fret of 6th string
+       Hence f[x] + offsets in source code => midi notes
+     */
+    if (f[1].substring(0, 1) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[2]) + 4) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[2]) + 4 + 36) + "\t";
+    }
+    if (f[1].substring(1, 2) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[3]) + 9) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[3]) + 9 + 36) + "\t";
+    }
+    if (f[1].substring(2, 3) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[4]) + 2) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[4]) + 2 + 48) + "\t";
+    }
+    if (f[1].substring(3, 4) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[5]) + 7) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[5]) + 7 + 48) + "\t";
+    }
+    if (f[1].substring(4, 5) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[6]) + 11) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[6]) + 11 + 48) + "\t";
+    }
+    if (f[1].substring(5, 6) == "1") {
+        s3 = s3 + "-\t";
+        midinotes = midinotes + "-\t";
+    } else {
+        s3 = s3 + a[(parseInt(f[7]) + 4) % 12].substring(0, 5) + "\t";
+        midinotes = midinotes + (parseInt(f[7]) + 4 + 60) + "\t";
+    }
     s1 = "String:\t" + s1;
     s2 = "Fret:\t" + parseInt(f[2]) + "\t" + parseInt(f[3]) + "\t" + parseInt(f[4]) + "\t" + parseInt(f[5]) + "\t" + parseInt(f[6]) + "\t" + parseInt(f[7]) + "\t";
     s3 = "Note:\t" + s3;
-    alert("=== CHORD INFO ===\n\nChord name: " + t + "\n\n" + s1 + "\n" + s2 + "\n" + s3 + "\n\n© 1998-2000 by WS64.com/ChordFind.com");
+    midinotes = "MIDI:\t" + midinotes;
+    alert("=== CHORD INFO ===\n\nChord name: " + in_chord + "\n\n" + s1 + "\n" + s2 + "\n" + s3 + "\n" + midinotes + "\n\n© 1998-2000 by WS64.com/ChordFind.com");
 }
 function ini(s1, s2, s3, s4, s5, s6) {
     s = '<IMG SRC="x/empty.gif" width=42 HEIGHT=14 ALT="';
