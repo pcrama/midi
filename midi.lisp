@@ -17,13 +17,13 @@ New line
 ;;; Lesser General Public License for more details.
 ;;;
 ;;; You should have received a copy of the GNU Lesser General Public
-;;; License along with this library; if not, write to the 
-;;; Free Software Foundation, Inc., 59 Temple Place - Suite 330, 
+;;; License along with this library; if not, write to the
+;;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;;; Boston, MA  02111-1307  USA.
 ;;;
 ;;; This file contains library for MIDI and Midifiles. Messages are
 ;;; represented as CLOS class instances in a class hierarchy that
-;;; reflects interesting aspects of the messages themselves. 
+;;; reflects interesting aspects of the messages themselves.
 
 (defpackage :midi
   (:use :common-lisp)
@@ -179,15 +179,15 @@ works only if the chars are coded in ASCII]"
 (defun read-message ()
   "read a message without time indication from *midi-input*"
   (let ((classname-or-subtype (aref *dispatch-table* *status*)))
-    (unless classname-or-subtype 
-      (error (make-condition 'unknown-event 
+    (unless classname-or-subtype
+      (error (make-condition 'unknown-event
 			     :status *status*)))
     (if (symbolp classname-or-subtype)
 	(make-instance classname-or-subtype)
 	(let* ((data-byte (read-next-byte))
 	       (classname (aref classname-or-subtype data-byte)))
 	  (unless classname
-	    (error (make-condition 'unknown-event 
+	    (error (make-condition 'unknown-event
 				   :status *status*
 				   :data-byte data-byte)))
 	  (unread-byte data-byte)
@@ -257,7 +257,7 @@ works only if the chars are coded in ASCII]"
 	  (format (read-fixed-length-quantity 2))
 	  (nb-tracks (read-fixed-length-quantity 2))
 	  (division (read-fixed-length-quantity 2)))
-      (unless (and (= length +header-mthd-length+) (= type +header-mthd+)) 
+      (unless (and (= length +header-mthd-length+) (= type +header-mthd+))
 	(error (make-condition 'header :header "MThd")))
       (make-instance 'midifile
 	:format format
@@ -317,7 +317,7 @@ works only if the chars are coded in ASCII]"
      new-value)
     (t (error "Unsupported conversion from format ~S to format ~S"
 	      (midifile-format midifile) new-value))))
-	  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; Macro for defining midi messages
@@ -416,7 +416,7 @@ default value will automatically combine the message's status-min and
       (with-slots ,(mapcar #'car slots) message
 	(symbol-macrolet ((next-byte (read-next-byte)))
 	    ,filler)))
-    
+
     (defmethod length-message + ((message ,name))
       (with-slots (status-min status-max data-min data-max ,@(mapcar #'car slots))
 	  message
@@ -426,14 +426,14 @@ default value will automatically combine the message's status-min and
       (with-slots (status-min status-max data-min data-max ,@(mapcar #'car slots))
 	  message
 	,writer))))
-    
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;; midi messages
 
 (define-midi-message message ()
   :slots ((time :initarg :time :accessor message-time)
-	  (status :initarg :status :reader message-status))
+	  (status :initarg :status :reader message-status :initform 0))
   :length 1
   :filler (setf status *status*)
   :writer (write-bytes status))
@@ -685,7 +685,7 @@ the PRINT-MIDI-MESSAGE method to print the slots."))
 		 (loop for elem across data do (write-bytes elem))))
 
 (define-midi-message authorization-system-exclusive-message (system-message)
-  :status-min #xf7 :status-max #xf7  
+  :status-min #xf7 :status-max #xf7
   :slots ((data))
   :filler (loop with len = (read-variable-length-quantity)
 	        initially (setf data (make-array
@@ -738,25 +738,25 @@ the PRINT-MIDI-MESSAGE method to print the slots."))
 
 (define-midi-message general-text-message (text-message)
   :data-min #x01 :data-max #x01)
-  
+
 (define-midi-message copyright-message (text-message)
   :data-min #x02 :data-max #x02)
-  
+
 (define-midi-message sequence/track-name-message (text-message tempo-map-message)
   :data-min #x03 :data-max #x03)
-  
+
 (define-midi-message instrument-message (text-message)
   :data-min #x04 :data-max #x04)
-  
+
 (define-midi-message lyric-message (text-message)
   :data-min #x05 :data-max #x05)
-  
+
 (define-midi-message marker-message (text-message tempo-map-message)
   :data-min #x06 :data-max #x06)
-  
+
 (define-midi-message cue-point-message (text-message)
   :data-min #x07 :data-max #x07)
-  
+
 (define-midi-message program-name-message (text-message)
   :data-min #x08 :data-max #x08)
 
@@ -821,8 +821,8 @@ the PRINT-MIDI-MESSAGE method to print the slots."))
 
 (define-midi-message time-signature-message (meta-message tempo-map-message)
   :data-min #x58 :data-max #x58
-  :slots ((nn :reader message-numerator) 
-	  (dd :reader message-denominator) 
+  :slots ((nn :reader message-numerator)
+	  (dd :reader message-denominator)
 	  (cc) (bb))
   :filler (progn next-byte (setf nn next-byte dd next-byte
 				 cc next-byte bb next-byte))
@@ -847,7 +847,7 @@ the PRINT-MIDI-MESSAGE method to print the slots."))
   :slots ((sf :reader message-sf)
 	  (mi :reader message-mi))
   :filler (progn next-byte (setf sf (let ((temp-sf next-byte))
-				      (if (> temp-sf 127) 
+				      (if (> temp-sf 127)
 					  (- temp-sf 256)
 					  temp-sf))
 				 mi next-byte))
@@ -858,8 +858,8 @@ the PRINT-MIDI-MESSAGE method to print the slots."))
   :data-min #x7f :data-max #x7f
   :slots ((data))
   :filler (setf data (loop with len = (read-variable-length-quantity)
-			   with vec = (make-array 
-				       len 
+			   with vec = (make-array
+				       len
 				       :element-type '(unsigned-byte 8))
 			   for i from 0 below len
 			   do (setf (aref vec i) next-byte)
