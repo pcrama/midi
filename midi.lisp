@@ -1,4 +1,3 @@
-New line
 ;;;  (c) copyright 2003 by Mathieu Chabanne, Camille Constant,
 ;;;                        Emmanuel Necibar and Stephanie Recco
 ;;;
