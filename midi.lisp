@@ -1,4 +1,3 @@
-New line
 ;;;  (c) copyright 2003 by Mathieu Chabanne, Camille Constant,
 ;;;                        Emmanuel Necibar and Stephanie Recco
 ;;;
@@ -40,7 +39,7 @@ New line
 	   #:message-sf #:message-mi #:message-tempo #:message-program
 	   #:message-value
 	   #:header #:header-type
-	   #:unknown-event #:status #:data-byte))
+	   #:unknown-event #:status #:data-byte #:dd #:bb #:cc #:nn))
 
 (in-package :midi)
 
